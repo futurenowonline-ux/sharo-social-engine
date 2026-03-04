@@ -4,8 +4,8 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 const apiKey = process.env.GEMINI_API_KEY || '';
 const genAI = new GoogleGenerativeAI(apiKey);
 
-// We use gemini-3.0-pro as specified in the strategic blueprint
-const model = genAI.getGenerativeModel({ model: 'gemini-3.0-pro' });
+// We use gemini-2.0-flash for fast, high-quality caption generation
+const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
 const SHARO_BAKERY_CONTEXT = `
 You are the Brand Voice Guardian for Sharo Bakery, located in Ulundi, KwaZulu-Natal, South Africa.
