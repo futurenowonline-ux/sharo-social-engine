@@ -18,9 +18,18 @@ export async function generateCaption(
         return { success: true, data: { caption } };
     } catch (error) {
         console.error("generateCaption action error:", error);
+        const message = error instanceof Error ? error.message : "Failed to generate caption";
+
+        if (message.includes("429") || message.includes("quota")) {
+            return {
+                success: false,
+                error: "Gemini API quota exceeded — free tier daily limit reached. Try again tomorrow or upgrade at ai.google.dev.",
+            };
+        }
+
         return {
             success: false,
-            error: error instanceof Error ? error.message : "Failed to generate caption",
+            error: message,
         };
     }
 }
