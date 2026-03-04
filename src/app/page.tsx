@@ -63,6 +63,12 @@ const TECH_STACK = [
   { icon: Shield, label: "Workload Identity" },
 ];
 
+const PRODUCTS = [
+  { src: "/sharo-bread.jpg", alt: "Sharo Health Bread", label: "Health Bread" },
+  { src: "/sharo-sandwich.jpg", alt: "Sharo Health Sandwiches", label: "Health Sandwiches" },
+  { src: "/sharo-buns.jpg", alt: "Sharo Cinnamon Buns", label: "Cinnamon Buns" },
+];
+
 export default function Home() {
   return (
     <div className="min-h-screen bg-background text-foreground overflow-hidden">
@@ -81,9 +87,13 @@ export default function Home() {
         className="relative z-20 flex items-center justify-between px-6 md:px-12 py-6"
       >
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-primary/20 flex items-center justify-center border border-primary/30">
-            <Sparkles size={18} className="text-primary" />
-          </div>
+          <Image
+            src="/sharo-logo.jpg"
+            alt="Sharo Bakery Logo"
+            width={40}
+            height={40}
+            className="rounded-lg"
+          />
           <span className="text-lg font-bold tracking-tight">
             Sharo Social Engine
           </span>
@@ -161,19 +171,41 @@ export default function Home() {
           <motion.div variants={item} className="relative">
             <div className="glass-card glow-amber overflow-hidden aspect-[4/3] relative">
               <Image
-                src="/hero-bread.png"
-                alt="Freshly baked artisan sourdough and cinnamon raisin rolls from Sharo Bakery"
+                src="/sharo-hero.png"
+                alt="Sharo Bakery — Mrs Sharon Gazu, handcrafted bread in Zululand"
                 fill
                 className="object-cover"
                 priority
                 sizes="(max-width: 768px) 100vw, 50vw"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
               <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
                 <span className="px-3 py-1.5 rounded-lg bg-black/60 backdrop-blur-sm text-xs text-white/90 border border-white/10">
-                  📸 AI-generated for Sharo Bakery
+                  🍞 Sharo Bakery, Ulundi
                 </span>
               </div>
+            </div>
+
+            {/* Product thumbnails strip */}
+            <div className="flex gap-3 mt-4">
+              {PRODUCTS.map((product) => (
+                <div
+                  key={product.label}
+                  className="flex-1 glass-card overflow-hidden rounded-xl relative aspect-square group"
+                >
+                  <Image
+                    src={product.src}
+                    alt={product.alt}
+                    fill
+                    className="object-cover group-hover:scale-105 transition-transform duration-500"
+                    sizes="(max-width: 768px) 33vw, 15vw"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+                  <span className="absolute bottom-2 left-2 right-2 text-[10px] font-medium text-white/90 text-center">
+                    {product.label}
+                  </span>
+                </div>
+              ))}
             </div>
           </motion.div>
         </motion.div>
