@@ -3,32 +3,65 @@
 import React, { useState } from 'react';
 import { GlassCard } from '@/components/ui/GlassCard';
 import {
-    BarChart, Activity, Sparkles, Calendar,
-    MessageCircleHeart, Image as ImageIcon, Send, RefreshCw, CheckCircle
+    Activity, Sparkles, Calendar,
+    Image as ImageIcon, Send, RefreshCw, CheckCircle, ChevronDown
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { generateCaption } from '@/app/actions';
+
+type Platform = 'Instagram' | 'Facebook' | 'LinkedIn' | 'TikTok';
+
+const PLATFORM_CONFIG: Record<Platform, { emoji: string; color: string }> = {
+    Instagram: { emoji: '📸', color: 'text-pink-400' },
+    Facebook: { emoji: '👥', color: 'text-blue-400' },
+    LinkedIn: { emoji: '💼', color: 'text-cyan-400' },
+    TikTok: { emoji: '🎵', color: 'text-white' },
+};
+
+// Stock bread image for generated previews
+const PREVIEW_IMAGES = [
+    'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=800&q=80',
+    'https://images.unsplash.com/photo-1549931319-a545753467c8?w=800&q=80',
+    'https://images.unsplash.com/photo-1555507036-ab1f4038024a?w=800&q=80',
+];
 
 export default function MissionControlDashboard() {
     const [activeTab, setActiveTab] = useState<'overview' | 'queue'>('overview');
     const [isGenerating, setIsGenerating] = useState(false);
+    const [prompt, setPrompt] = useState('');
+    const [platform, setPlatform] = useState<Platform>('Instagram');
+    const [showPlatformMenu, setShowPlatformMenu] = useState(false);
     const [generatedPreview, setGeneratedPreview] = useState<{ caption: string; imageUrl: string } | null>(null);
+    const [error, setError] = useState<string | null>(null);
 
-    const handleGenerate = () => {
+    const handleGenerate = async () => {
+        if (!prompt.trim()) return;
         setIsGenerating(true);
-        // Mocking the backend generation delay
-        setTimeout(() => {
-            setGeneratedPreview({
-                caption: "✨ Start your morning right with our freshly baked Cinnamon Raisin Sourdough. Hot out the oven and perfect with local Mzansi coffee! ☕🍞 #SharoBakery #UlundiBakes #ArtisanBread",
-                imageUrl: "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=800&q=80" // Bread placeholder
-            });
+        setError(null);
+
+        try {
+            const result = await generateCaption(prompt, platform);
+
+            if (result.success && result.data) {
+                setGeneratedPreview({
+                    caption: result.data.caption,
+                    imageUrl: PREVIEW_IMAGES[Math.floor(Math.random() * PREVIEW_IMAGES.length)],
+                });
+            } else {
+                setError(result.error || 'Something went wrong');
+            }
+        } catch (err) {
+            setError('Network error — please try again');
+            console.error(err);
+        } finally {
             setIsGenerating(false);
-        }, 2500);
+        }
     };
 
     return (
-        <div className="min-h-screen p-8 text-foreground bg-background">
+        <div className="min-h-screen p-6 md:p-8 text-foreground bg-background">
             {/* Header */}
-            <header className="mb-10 flex justify-between items-center">
+            <header className="mb-10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                     <h1 className="text-4xl font-bold tracking-tight mb-2">
                         Mission Control
@@ -38,6 +71,12 @@ export default function MissionControlDashboard() {
                     </p>
                 </div>
                 <div className="flex items-center gap-4">
+                    <a
+                        href="/"
+                        className="px-4 py-2 rounded-full bg-white/5 border border-white/10 text-sm text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+                    >
+                        ← Home
+                    </a>
                     <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-sm">
                         <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                         Sync Active
@@ -128,6 +167,7 @@ export default function MissionControlDashboard() {
                     </div>
 
                     <div className="space-y-4">
+                        {/* Image upload area */}
                         <div className="p-4 rounded-xl bg-white/5 border border-white/10 h-48 flex items-center justify-center relative overflow-hidden group hover:border-white/20 transition-colors cursor-pointer">
                             <div className="text-center z-10 transition-transform group-hover:scale-105">
                                 <ImageIcon className="mx-auto mb-2 text-white/40" size={32} />
@@ -136,22 +176,73 @@ export default function MissionControlDashboard() {
                             </div>
                         </div>
 
+                        {/* Platform selector */}
+                        <div className="relative">
+                            <button
+                                onClick={() => setShowPlatformMenu(!showPlatformMenu)}
+                                className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-white/5 border border-white/10 hover:border-white/20 transition-colors text-sm"
+                            >
+                                <span className="flex items-center gap-2">
+                                    <span>{PLATFORM_CONFIG[platform].emoji}</span>
+                                    <span className={PLATFORM_CONFIG[platform].color}>{platform}</span>
+                                </span>
+                                <ChevronDown size={16} className={`text-white/50 transition-transform ${showPlatformMenu ? 'rotate-180' : ''}`} />
+                            </button>
+                            <AnimatePresence>
+                                {showPlatformMenu && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: -8 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -8 }}
+                                        className="absolute z-50 w-full mt-2 rounded-xl bg-zinc-900 border border-white/10 overflow-hidden shadow-2xl"
+                                    >
+                                        {(Object.keys(PLATFORM_CONFIG) as Platform[]).map((p) => (
+                                            <button
+                                                key={p}
+                                                onClick={() => { setPlatform(p); setShowPlatformMenu(false); }}
+                                                className={`w-full flex items-center gap-3 px-4 py-3 text-sm hover:bg-white/10 transition-colors ${p === platform ? 'bg-white/5' : ''}`}
+                                            >
+                                                <span>{PLATFORM_CONFIG[p].emoji}</span>
+                                                <span className={PLATFORM_CONFIG[p].color}>{p}</span>
+                                            </button>
+                                        ))}
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
+
+                        {/* Prompt input */}
                         <div className="bg-white/5 rounded-xl border border-white/10 p-2 flex items-center">
                             <input
                                 type="text"
                                 placeholder="Describe the content you want to generate (e.g., 'Sunny morning with Cinnamon Buns')"
                                 className="bg-transparent border-none outline-none flex-grow p-2 text-white/80 text-sm placeholder:text-white/30"
                                 disabled={isGenerating}
+                                value={prompt}
+                                onChange={(e) => setPrompt(e.target.value)}
+                                onKeyDown={(e) => { if (e.key === 'Enter') handleGenerate(); }}
                             />
                             <button
                                 className="p-2 bg-primary text-white rounded-lg hover:bg-primary/80 transition-colors disabled:opacity-50"
                                 onClick={handleGenerate}
-                                disabled={isGenerating}
+                                disabled={isGenerating || !prompt.trim()}
                             >
                                 {isGenerating ? <RefreshCw size={18} className="animate-spin" /> : <Send size={18} />}
                             </button>
                         </div>
 
+                        {/* Error message */}
+                        {error && (
+                            <motion.p
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                className="text-red-400 text-xs px-2"
+                            >
+                                {error}
+                            </motion.p>
+                        )}
+
+                        {/* Generated preview */}
                         <AnimatePresence>
                             {generatedPreview && (
                                 <motion.div
@@ -171,12 +262,18 @@ export default function MissionControlDashboard() {
                                                 alt="Generated preview"
                                                 className="w-full h-full object-cover"
                                             />
+                                            <div className="absolute top-2 right-2 px-2 py-1 rounded-md bg-black/60 backdrop-blur-sm text-xs text-white/80 border border-white/10">
+                                                {PLATFORM_CONFIG[platform].emoji} {platform}
+                                            </div>
                                         </div>
-                                        <p className="text-sm border-l-2 border-primary pl-3 py-1 text-white/90">
+                                        <p className="text-sm border-l-2 border-primary pl-3 py-1 text-white/90 whitespace-pre-wrap">
                                             {generatedPreview.caption}
                                         </p>
                                         <div className="flex gap-2 mt-4 justify-end">
-                                            <button className="px-4 py-2 text-xs font-medium rounded-lg border border-white/10 hover:bg-white/5 transition-colors text-white/80">
+                                            <button
+                                                className="px-4 py-2 text-xs font-medium rounded-lg border border-white/10 hover:bg-white/5 transition-colors text-white/80"
+                                                onClick={() => { setGeneratedPreview(null); handleGenerate(); }}
+                                            >
                                                 Regenerate
                                             </button>
                                             <button
@@ -184,7 +281,7 @@ export default function MissionControlDashboard() {
                                                 onClick={() => setGeneratedPreview(null)}
                                             >
                                                 <CheckCircle size={14} />
-                                                Approve & Schedule
+                                                Approve &amp; Schedule
                                             </button>
                                         </div>
                                     </div>
